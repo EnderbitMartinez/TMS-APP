@@ -61,7 +61,7 @@
         <h2 class="text-2xl font-bold text-slate-800">Directorio de Clientes</h2>
         <p class="text-slate-500 text-sm">Gestiona la base de datos de consignatarios, ordenantes y empresas contratantes.</p>
       </div>
-      <button onclick="toggleModal(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 text-sm">
+      <button onclick="abrirModalCrear()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 text-sm">
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
         + Agregar Cliente
       </button>
@@ -78,11 +78,12 @@
               <th class="p-4">Persona Contacto</th>
               <th class="p-4">Teléfono / Email</th>
               <th class="p-4">Estado</th>
+              <th class="p-4 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody id="tablaClientesBody" class="divide-y divide-slate-100">
             <tr>
-              <td colspan="5" class="p-6 text-center text-slate-400">Cargando catálogo de clientes...</td>
+              <td colspan="6" class="p-6 text-center text-slate-400">Cargando catálogo de clientes...</td>
             </tr>
           </tbody>
         </table>
@@ -91,19 +92,20 @@
 
   </main>
 
-  <!-- MODAL PARA REGISTRAR CLIENTE -->
+  <!-- MODAL PARA CREAR / EDITAR CLIENTE -->
   <div id="modalCliente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
       
       <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
         <div>
-          <h3 class="font-bold text-lg">Registrar Nuevo Cliente</h3>
+          <h3 id="modalTitulo" class="font-bold text-lg">Registrar Nuevo Cliente</h3>
           <p class="text-xs text-slate-400">Ingresa los datos fiscales y operacionales de la empresa.</p>
         </div>
         <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
       </div>
 
       <form id="formCliente" class="p-6 space-y-4">
+        <input type="hidden" id="cliente_id">
         
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -156,6 +158,8 @@
 
   <script src="config.js"></script>
   <script>
+    let clientesCache = [];
+
     // 1. Validar sesión e inicializar
     async function initClientes() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -167,7 +171,7 @@
       obtenerClientes();
     }
 
-    // 2. Control Visibilidad Modal
+    // 2. Modales
     function toggleModal(show) {
       const modal = document.getElementById('modalCliente');
       if (show) {
@@ -177,25 +181,57 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.getElementById('formCliente').reset();
+        document.getElementById('cliente_id').value = '';
       }
     }
 
-    // 3. Consultar clientes en Supabase y renderizar la tabla
+    function abrirModalCrear() {
+      document.getElementById('modalTitulo').innerText = 'Registrar Nuevo Cliente';
+      document.getElementById('cliente_id').value = '';
+      document.getElementById('formCliente').reset();
+      toggleModal(true);
+    }
+
+    function abrirModalEditar(id) {
+      const cliente = clientesCache.find(c => c.id === id);
+      if (!cliente) return;
+
+      document.getElementById('modalTitulo').innerText = 'Editar Cliente';
+      document.getElementById('cliente_id').value = cliente.id;
+      document.getElementById('rif_cedula').value = cliente.rif_cedula || cliente.rif || '';
+      document.getElementById('razon_social').value = cliente.razon_social || '';
+      document.getElementById('nombre_comercial').value = cliente.nombre_comercial || '';
+      document.getElementById('contacto_nombre').value = cliente.contacto_nombre || '';
+      document.getElementById('contacto_telefono').value = cliente.contacto_telefono || '';
+      document.getElementById('contacto_email').value = cliente.contacto_email || '';
+      document.getElementById('direccion').value = cliente.direccion || '';
+
+      toggleModal(true);
+    }
+
+    // 3. Consultar clientes (Intenta en 'clientes' y respalda en 'clients')
     async function obtenerClientes() {
       const tbody = document.getElementById('tablaClientesBody');
       
       try {
-        const { data: clientes, error } = await supabaseClient
-          .from('clients')
+        let { data: clientes, error } = await supabaseClient
+          .from('clientes')
           .select('*')
           .order('razon_social', { ascending: true });
 
-        if (error) throw error;
+        // Si la tabla 'clientes' falla o no existe, intenta con 'clients'
+        if (error) {
+          const res = await supabaseClient.from('clients').select('*').order('razon_social', { ascending: true });
+          clientes = res.data;
+          if (res.error) throw error;
+        }
 
-        if (!clientes || clientes.length === 0) {
+        clientesCache = clientes || [];
+
+        if (!clientesCache || clientesCache.length === 0) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="5" class="p-8 text-center text-slate-400">
+              <td colspan="6" class="p-8 text-center text-slate-400">
                 No hay clientes registrados en la base de datos.<br>
                 <span class="text-xs text-slate-500">Haz clic en "+ Agregar Cliente" para añadir el primero.</span>
               </td>
@@ -203,11 +239,13 @@
           return;
         }
 
-        tbody.innerHTML = clientes.map(c => `
+        tbody.innerHTML = clientesCache.map(c => {
+          const rifVal = c.rif_cedula || c.rif || '-';
+          return `
           <tr class="hover:bg-slate-50/80 transition-colors">
-            <td class="p-4 font-bold text-slate-900">${c.rif_cedula}</td>
+            <td class="p-4 font-bold text-slate-900">${rifVal}</td>
             <td class="p-4">
-              <div class="font-bold text-slate-800">${c.razon_social}</div>
+              <div class="font-bold text-slate-800">${c.razon_social || '-'}</div>
               <div class="text-xs text-slate-500">${c.nombre_comercial || ''}</div>
             </td>
             <td class="p-4 font-medium">${c.contacto_nombre || '-'}</td>
@@ -220,23 +258,36 @@
                 ${c.estado || 'Activo'}
               </span>
             </td>
+            <td class="p-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button onclick="abrirModalEditar('${c.id}')" title="Editar" class="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-all">
+                  ✏️
+                </button>
+                <button onclick="eliminarCliente('${c.id}')" title="Eliminar" class="p-1.5 text-slate-600 hover:text-red-600 hover:bg-slate-100 rounded-lg transition-all">
+                  🗑️
+                </button>
+              </div>
+            </td>
           </tr>
-        `).join('');
+        `;
+        }).join('');
 
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 font-medium">Error al conectar con la base de datos: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500 font-medium">Error al conectar con la base de datos: ${err.message}</td></tr>`;
       }
     }
 
-    // 4. Guardar cliente en Supabase
+    // 4. Guardar / Actualizar Cliente
     document.getElementById('formCliente').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnGuardar');
       btn.disabled = true;
       btn.innerText = 'Guardando...';
 
-      const nuevoCliente = {
+      const id = document.getElementById('cliente_id').value;
+      const datosCliente = {
         rif_cedula: document.getElementById('rif_cedula').value.trim(),
+        rif: document.getElementById('rif_cedula').value.trim(),
         razon_social: document.getElementById('razon_social').value.trim(),
         nombre_comercial: document.getElementById('nombre_comercial').value.trim(),
         contacto_nombre: document.getElementById('contacto_nombre').value.trim(),
@@ -246,19 +297,43 @@
       };
 
       try {
-        const { error } = await supabaseClient.from('clients').insert([nuevoCliente]);
-        if (error) throw error;
+        let error = null;
+        
+        // Intentar guardar primero en la tabla 'clientes' y luego en 'clients' si no existe
+        if (id) {
+          const res = await supabaseClient.from('clientes').update(datosCliente).eq('id', id);
+          error = res.error;
+          if (error) await supabaseClient.from('clients').update(datosCliente).eq('id', id);
+        } else {
+          const res = await supabaseClient.from('clientes').insert([datosCliente]);
+          error = res.error;
+          if (error) await supabaseClient.from('clients').insert([datosCliente]);
+        }
 
         toggleModal(false);
         obtenerClientes();
 
       } catch (err) {
-        alert('Error al registrar cliente: ' + err.message);
+        alert('Error al procesar cliente: ' + err.message);
       } finally {
         btn.disabled = false;
         btn.innerText = 'Guardar Cliente';
       }
     });
+
+    // 5. Eliminar Cliente
+    async function eliminarCliente(id) {
+      if (!confirm('¿Estás seguro de que deseas eliminar este cliente de la base de datos?')) return;
+
+      try {
+        let { error } = await supabaseClient.from('clientes').delete().eq('id', id);
+        if (error) await supabaseClient.from('clients').delete().eq('id', id);
+
+        obtenerClientes();
+      } catch (err) {
+        alert('Error al eliminar: ' + err.message);
+      }
+    }
 
     initClientes();
   </script>
