@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TMS App - Cotizaciones de Transporte</title>
+  <!-- Tailwind CSS para el diseño -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SDK Oficial de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+  <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6">
+    <h1 class="text-2xl font-bold text-slate-800 mb-2">Sistema TMS - Gestión de Cotizaciones</h1>
+    <p class="text-sm text-slate-500 mb-6">Registro rápido de clientes y solicitudes de flete</p>
+
+    <div id="alerta" class="hidden p-4 mb-4 rounded-lg text-sm font-medium"></div>
+
+    <form id="cotizacionForm" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RIF / Identificación</label>
+          <input type="text" id="rif" required placeholder="J-12345678-0" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Razón Social / Empresa</label>
+          <input type="text" id="razon_social" required placeholder="Distribuidora C.A." class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contacto</label>
+          <input type="text" id="contacto_nombre" placeholder="Nombre del representante" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Teléfono</label>
+          <input type="text" id="telefono" placeholder="0414-0000000" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+      </div>
+
+      <hr class="my-4 border-slate-200">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Origen</label>
+          <input type="text" id="origen" required placeholder="Puerto Cabello" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Destino</label>
+          <input type="text" id="destino" required placeholder="Caracas" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Carga</label>
+          <input type="text" id="tipo_carga" placeholder="Contenedor 40ft / Carga Seca" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Monto Cotizado ($)</label>
+          <input type="number" step="0.01" id="monto_cotizado" required placeholder="1200.00" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+      </div>
+
+      <button type="submit" id="btnGuardar" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">
+        Guardar Cotización
+      </button>
+    </form>
+  </div>
+
+  <!-- Importamos las credenciales desde config.js -->
+  <script src="config.js"></script>
+
+  <!-- Lógica para interactuar con Supabase -->
+  <script>
+    const form = document.getElementById('cotizacionForm');
+    const alerta = document.getElementById('alerta');
+    const btnGuardar = document.getElementById('btnGuardar');
+
+    function mostrarAlerta(msg, esError = false) {
+      alerta.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+      alerta.classList.add(esError ? 'bg-red-100' : 'bg-green-100', esError ? 'text-red-700' : 'text-green-700');
+      alerta.innerText = msg;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btnGuardar.disabled = true;
+      btnGuardar.innerText = 'Guardando...';
+
+      const rif = document.getElementById('rif').value;
+      const razon_social = document.getElementById('razon_social').value;
+      const contacto_nombre = document.getElementById('contacto_nombre').value;
+      const telefono = document.getElementById('telefono').value;
+      const origen = document.getElementById('origen').value;
+      const destino = document.getElementById('destino').value;
+      const tipo_carga = document.getElementById('tipo_carga').value;
+      const monto_cotizado = parseFloat(document.getElementById('monto_cotizado').value);
+
+      try {
+        // 1. Buscar o Crear Cliente
+        let { data: cliente, error: errCliente } = await supabase
+          .from('clientes')
+          .select('id')
+          .eq('rif', rif)
+          .maybeSingle();
+
+        if (!cliente) {
+          const { data: nuevoCliente, error: errNuevo } = await supabase
+            .from('clientes')
+            .insert([{ rif, razon_social, contacto_nombre, telefono }])
+            .select()
+            .single();
+
+          if (errNuevo) throw errNuevo;
+          cliente = nuevoCliente;
+        }
+
+        // 2. Crear Cotización
+        const codigo_cotizacion = 'COT-' + Date.now().toString().slice(-5);
+        const { error: errCotizacion } = await supabase
+          .from('cotizaciones')
+          .insert([{
+            codigo_cotizacion,
+            cliente_id: cliente.id,
+            origen,
+            destino,
+            tipo_carga,
+            monto_cotizado,
+            estatus: 'Pendiente'
+          }]);
+
+        if (errCotizacion) throw errCotizacion;
+
+        mostrarAlerta(`¡Cotización ${codigo_cotizacion} creada exitosamente!`);
+        form.reset();
+      } catch (err) {
+        mostrarAlerta('Error: ' + err.message, true);
+      } finally {
+        btnGuardar.disabled = false;
+        btnGuardar.innerText = 'Guardar Cotización';
+      }
+    });
+  </script>
+</body>
+</html>
