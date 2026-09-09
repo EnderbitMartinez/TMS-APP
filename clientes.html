@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TMS - Directorio de Clientes</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <!-- NAV/HEADER DE DASHBOARD -->
+  <header style="background-color: #0f172a; padding: 0.75rem 1.5rem; border-bottom: 1px solid #1e293b;">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+      
+      <!-- BRANDING / LOGO COMPLETO -->
+      <a href="dashboard.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+        <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+          <rect x="5" y="5" width="90" height="90" rx="20" fill="#1e293b"/>
+          <path d="M 15 35 H 35 M 10 50 H 28 M 18 65 H 32" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 32 32 L 62 32 C 70 32, 76 38, 80 46 L 85 60 C 87 64, 85 70, 78 70 L 32 70 Z" fill="url(#speedGrad)"/>
+          <path d="M 62 37 L 74 49 H 62 Z" fill="#93c5fd"/>
+          <path d="M 40 80 H 80 L 86 70 H 46 Z" fill="#f97316"/>
+          <circle cx="44" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+          <circle cx="72" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+          <defs>
+            <linearGradient id="speedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#1d4ed8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <div style="display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="color: #ffffff; font-weight: 900; font-size: 1.25rem; letter-spacing: 0.5px; font-family: system-ui, -apple-system, sans-serif;">TMS</span>
+            <span style="color: #f97316; font-weight: 800; font-size: 1rem;">|</span>
+            <span style="color: #3b82f6; font-weight: 700; font-size: 0.95rem; letter-spacing: 2px; font-family: system-ui, -apple-system, sans-serif;">LOGISTICS</span>
+          </div>
+          <span style="color: #64748b; font-size: 0.65rem; font-weight: 600; letter-spacing: 1px;">DIRECTORIO DE CLIENTES</span>
+        </div>
+      </a>
+
+      <!-- USUARIO Y REGRESO A DASHBOARD -->
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span id="userEmail" style="color: #94a3b8; font-size: 0.875rem; font-weight: 500;"></span>
+        <a href="dashboard.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border border-slate-700">
+          ← Menú Principal
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-6xl mx-auto p-6">
+    
+    <!-- ENCABEZADO Y BOTÓN DE ACCIÓN -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800">Directorio de Clientes</h2>
+        <p class="text-slate-500 text-sm">Gestiona la base de datos de consignatarios, ordenantes y empresas contratantes.</p>
+      </div>
+      <button onclick="toggleModal(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 text-sm">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        + Agregar Cliente
+      </button>
+    </div>
+
+    <!-- TABLA DE CLIENTES -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-xs uppercase tracking-wider">
+            <tr>
+              <th class="p-4">RIF / Cédula</th>
+              <th class="p-4">Razón Social / Nombre Comercial</th>
+              <th class="p-4">Persona Contacto</th>
+              <th class="p-4">Teléfono / Email</th>
+              <th class="p-4">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tablaClientesBody" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="5" class="p-6 text-center text-slate-400">Cargando catálogo de clientes...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL PARA REGISTRAR CLIENTE -->
+  <div id="modalCliente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
+      
+      <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-lg">Registrar Nuevo Cliente</h3>
+          <p class="text-xs text-slate-400">Ingresa los datos fiscales y operacionales de la empresa.</p>
+        </div>
+        <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+      </div>
+
+      <form id="formCliente" class="p-6 space-y-4">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">RIF / CÉDULA *</label>
+            <input type="text" id="rif_cedula" required placeholder="Ej: J-12345678-0" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">NOMBRE COMERCIAL</label>
+            <input type="text" id="nombre_comercial" placeholder="Ej: Importadora Central" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">RAZÓN SOCIAL *</label>
+          <input type="text" id="razon_social" required placeholder="Ej: Inversiones La Guaira C.A." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">PERSONA DE CONTACTO</label>
+            <input type="text" id="contacto_nombre" placeholder="Ej: Lic. Carlos Pérez" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">TELÉFONO</label>
+            <input type="text" id="contacto_telefono" placeholder="Ej: 0412-1234567" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">CORREO ELECTRÓNICO</label>
+          <input type="email" id="contacto_email" placeholder="operaciones@empresa.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">DIRECCIÓN FISCAL / FISICA</label>
+          <textarea id="direccion" rows="2" placeholder="Ej: Av. Principal de Maiquetía, Depósito #3..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="toggleModal(false)" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-100 transition-all">Cancelar</button>
+          <button type="submit" id="btnGuardar" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm shadow-sm transition-all">Guardar Cliente</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    // 1. Validar sesión e inicializar
+    async function initClientes() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
+      }
+      document.getElementById('userEmail').innerText = session.user.email;
+      obtenerClientes();
+    }
+
+    // 2. Control Visibilidad Modal
+    function toggleModal(show) {
+      const modal = document.getElementById('modalCliente');
+      if (show) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.getElementById('formCliente').reset();
+      }
+    }
+
+    // 3. Consultar clientes en Supabase y renderizar la tabla
+    async function obtenerClientes() {
+      const tbody = document.getElementById('tablaClientesBody');
+      
+      try {
+        const { data: clientes, error } = await supabaseClient
+          .from('clients')
+          .select('*')
+          .order('razon_social', { ascending: true });
+
+        if (error) throw error;
+
+        if (!clientes || clientes.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="p-8 text-center text-slate-400">
+                No hay clientes registrados en la base de datos.<br>
+                <span class="text-xs text-slate-500">Haz clic en "+ Agregar Cliente" para añadir el primero.</span>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = clientes.map(c => `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="p-4 font-bold text-slate-900">${c.rif_cedula}</td>
+            <td class="p-4">
+              <div class="font-bold text-slate-800">${c.razon_social}</div>
+              <div class="text-xs text-slate-500">${c.nombre_comercial || ''}</div>
+            </td>
+            <td class="p-4 font-medium">${c.contacto_nombre || '-'}</td>
+            <td class="p-4">
+              <div class="font-medium text-slate-800">${c.contacto_telefono || '-'}</div>
+              <div class="text-xs text-blue-600">${c.contacto_email || ''}</div>
+            </td>
+            <td class="p-4">
+              <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                ${c.estado || 'Activo'}
+              </span>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 font-medium">Error al conectar con la base de datos: ${err.message}</td></tr>`;
+      }
+    }
+
+    // 4. Guardar cliente en Supabase
+    document.getElementById('formCliente').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnGuardar');
+      btn.disabled = true;
+      btn.innerText = 'Guardando...';
+
+      const nuevoCliente = {
+        rif_cedula: document.getElementById('rif_cedula').value.trim(),
+        razon_social: document.getElementById('razon_social').value.trim(),
+        nombre_comercial: document.getElementById('nombre_comercial').value.trim(),
+        contacto_nombre: document.getElementById('contacto_nombre').value.trim(),
+        contacto_telefono: document.getElementById('contacto_telefono').value.trim(),
+        contacto_email: document.getElementById('contacto_email').value.trim(),
+        direccion: document.getElementById('direccion').value.trim()
+      };
+
+      try {
+        const { error } = await supabaseClient.from('clients').insert([nuevoCliente]);
+        if (error) throw error;
+
+        toggleModal(false);
+        obtenerClientes();
+
+      } catch (err) {
+        alert('Error al registrar cliente: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Guardar Cliente';
+      }
+    });
+
+    initClientes();
+  </script>
+</body>
+</html>
