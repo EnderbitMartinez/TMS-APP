@@ -3,145 +3,241 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TMS App - Cotizaciones de Transporte</title>
-  <!-- Tailwind CSS para el diseño -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- SDK Oficial de Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Módulo de Cotizaciones - Captura de Datos</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f0f2f5; padding: 20px; color: #333; }
+    .form-container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    
+    h2 { border-bottom: 2px solid #0056b3; padding-bottom: 8px; color: #0056b3; margin-top: 0; }
+    .section-title { background: #e9ecef; padding: 6px 12px; font-weight: bold; margin: 20px 0 10px 0; border-left: 4px solid #0056b3; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #495057; }
+    .form-group input, .form-group select, .form-group textarea { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; }
+    .form-group input[readonly] { background-color: #e9ecef; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #dee2e6; padding: 8px; font-size: 12px; text-align: left; }
+    th { background: #f8f9fa; }
+    
+    .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .btn-add { background: #28a745; color: white; margin-top: 8px; }
+    .btn-remove { background: #dc3545; color: white; padding: 4px 8px; }
+    .btn-save { background: #0056b3; color: white; font-size: 15px; padding: 12px 24px; }
+    .btn-print { background: #17a2b8; color: white; font-size: 15px; padding: 12px 24px; display: none; }
+    
+    .actions-bar { margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px; border-top: 1px solid #dee2e6; padding-top: 15px; }
+    .total-display { font-size: 18px; font-weight: bold; text-align: right; margin-top: 10px; color: #0056b3; }
+  </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-8">
-  <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6">
-    <h1 class="text-2xl font-bold text-slate-800 mb-2">Sistema TMS - Gestión de Cotizaciones</h1>
-    <p class="text-sm text-slate-500 mb-6">Registro rápido de clientes y solicitudes de flete</p>
+<body>
 
-    <div id="alerta" class="hidden p-4 mb-4 rounded-lg text-sm font-medium"></div>
-
-    <form id="cotizacionForm" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RIF / Identificación</label>
-          <input type="text" id="rif" required placeholder="J-12345678-0" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Razón Social / Empresa</label>
-          <input type="text" id="razon_social" required placeholder="Distribuidora C.A." class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
+<div class="form-container">
+  <h2>Generador de Cotizaciones</h2>
+  
+  <form id="cotizacionForm" onsubmit="guardarCotizacion(event)">
+    
+    <!-- 1. DATOS DE CONTROL / SISTEMA -->
+    <div class="section-title">1. Control de Registro</div>
+    <div class="grid">
+      <div class="form-group">
+        <label>Correlativo (Autogenerado):</label>
+        <input type="text" id="correlativo" value="COT-0416" readonly>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contacto</label>
-          <input type="text" id="contacto_nombre" placeholder="Nombre del representante" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Teléfono</label>
-          <input type="text" id="telefono" placeholder="0414-0000000" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
+      <div class="form-group">
+        <label>Fecha / Hora:</label>
+        <input type="datetime-local" id="fechaHora" required>
       </div>
-
-      <hr class="my-4 border-slate-200">
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Origen</label>
-          <input type="text" id="origen" required placeholder="Puerto Cabello" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Destino</label>
-          <input type="text" id="destino" required placeholder="Caracas" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
+      <div class="form-group">
+        <label>Término de Pago:</label>
+        <select id="terminoPago" required>
+          <option value="CONTRA FACTURA">CONTRA FACTURA</option>
+          <option value="CRÉDITO 15 DÍAS">CRÉDITO 15 DÍAS</option>
+          <option value="50% ADELANTADO">50% ADELANTADO</option>
+        </select>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Carga</label>
-          <input type="text" id="tipo_carga" placeholder="Contenedor 40ft / Carga Seca" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Monto Cotizado ($)</label>
-          <input type="number" step="0.01" id="monto_cotizado" required placeholder="1200.00" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
+      <div class="form-group">
+        <label>Válida Hasta:</label>
+        <input type="date" id="validaHasta" required>
       </div>
+      <div class="form-group">
+        <label>Ejecutivo / Usuario Activo:</label>
+        <!-- Inyección automática del usuario logueado en el sistema -->
+        <input type="text" id="vendedor" value="LSCOTT" readonly>
+      </div>
+    </div>
 
-      <button type="submit" id="btnGuardar" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">
-        Guardar Cotización
-      </button>
-    </form>
-  </div>
+    <!-- 2. CLIENTE (CONECTADO A BD CLIENTES) -->
+    <div class="section-title">2. Información del Cliente (Base de Datos)</div>
+    <div class="grid">
+      <div class="form-group" style="grid-column: span 2;">
+        <label>Seleccionar Cliente:</label>
+        <select id="clienteSelect" onchange="cargarDatosCliente()" required>
+          <option value="">-- Seleccione un cliente registrado --</option>
+          <option value="1" data-dir="AV. NORTE SUR, EDIF. LABORATORIOS VARGAS PISO 2 LOCAL 171 URB QUINTA CRESPO" data-tel="+58 212 409 0184">LABORATORIOS VARGAS, S.A.</option>
+          <option value="2" data-dir="AV. PRINCIPAL LAS MERCEDES, EDIF. FARMATODO" data-tel="+58 212 999 1111">FARMATODO C.A.</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Teléfono:</label>
+        <input type="text" id="clienteTel" readonly>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top: 10px;">
+      <label>Dirección Fiscal:</label>
+      <input type="text" id="clienteDir" readonly>
+    </div>
 
-  <!-- Importamos las credenciales desde config.js -->
-  <script src="config.js"></script>
+    <!-- 3. RUTA Y MOVIMIENTO -->
+    <div class="section-title">3. Datos de Logística y Operación</div>
+    <div class="grid">
+      <div class="form-group">
+        <label>Tipo de Movimiento:</label>
+        <select id="tipoMov">
+          <option value="OTRO">OTRO</option>
+          <option value="IMPORTACION">IMPORTACION</option>
+          <option value="EXPORTACION">EXPORTACION</option>
+          <option value="NACIONAL">NACIONAL</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Origen:</label>
+        <input type="text" id="origen" placeholder="Ej. CARACAS" required>
+      </div>
+      <div class="form-group">
+        <label>Destino:</label>
+        <input type="text" id="destino" placeholder="Ej. CHARALLAVE" required>
+      </div>
+    </div>
 
-  <!-- Lógica para interactuar con Supabase -->
-  <script>
-    const form = document.getElementById('cotizacionForm');
-    const alerta = document.getElementById('alerta');
-    const btnGuardar = document.getElementById('btnGuardar');
+    <!-- 4. CARGA -->
+    <div class="section-title">4. Información de la Carga</div>
+    <div class="grid">
+      <div class="form-group">
+        <label>Piezas:</label>
+        <input type="number" id="cargaPiezas" value="1" min="1">
+      </div>
+      <div class="form-group" style="grid-column: span 2;">
+        <label>Descripción de Carga:</label>
+        <input type="text" id="cargaDesc" placeholder="Ej. DESPACHO PARA FARMATODO CHARALLAVE">
+      </div>
+      <div class="form-group">
+        <label>Peso (Kg):</label>
+        <input type="text" id="cargaPeso">
+      </div>
+      <div class="form-group">
+        <label>Volumen (m³):</label>
+        <input type="text" id="cargaVol">
+      </div>
+    </div>
 
-    function mostrarAlerta(msg, esError = false) {
-      alerta.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
-      alerta.classList.add(esError ? 'bg-red-100' : 'bg-green-100', esError ? 'text-red-700' : 'text-green-700');
-      alerta.innerText = msg;
+    <!-- 5. TABLA DINÁMICA DE CARGOS Y SERVICIOS -->
+    <div class="section-title">5. Desglose de Cargos y Tarifas</div>
+    <table id="tablaCargos">
+      <thead>
+        <tr>
+          <th style="width: 45%;">Descripción del Cargo</th>
+          <th style="width: 15%;">Cantidad</th>
+          <th style="width: 20%;">Precio ($)</th>
+          <th style="width: 15%;">Valor ($)</th>
+          <th style="width: 5%;">Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyCargos">
+        <!-- Fila Inicial por Defecto -->
+        <tr>
+          <td><input type="text" name="descCargo[]" class="form-group" style="width:100%" placeholder="Ej. TRANSPORTE TERRESTRE C-750" required></td>
+          <td><input type="number" name="cantCargo[]" style="width:100%" value="1" min="1" onchange="calcularTotales()" required></td>
+          <td><input type="number" step="0.01" name="precioCargo[]" style="width:100%" value="0.00" onchange="calcularTotales()" required></td>
+          <td><input type="text" name="valorCargo[]" style="width:100%" value="0.00" readonly></td>
+          <td><button type="button" class="btn btn-remove" onclick="eliminarFila(this)">X</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-add" onclick="agregarFila()">+ Agregar Cargo</button>
+
+    <div class="total-display">Total Cotizado: $ <span id="montoTotalDisplay">0.00</span></div>
+
+    <!-- 6. ACCIONES FINALIZADORAS -->
+    <div class="actions-bar">
+      <button type="submit" id="btnGuardar" class="btn btn-save">💾 Guardar Cotización en BD</button>
+      <button type="button" id="btnImprimir" class="btn btn-print" onclick="abrirVistaImpresion()">🖨️ Generar PDF / Imprimir</button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  // Cargar fecha actual
+  document.getElementById('fechaHora').value = new Date().toISOString().slice(0, 16);
+
+  // Auto-llenar datos al seleccionar cliente de la BD
+  function cargarDatosCliente() {
+    const select = document.getElementById('clienteSelect');
+    const option = select.options[select.selectedIndex];
+    document.getElementById('clienteDir').value = option.getAttribute('data-dir') || '';
+    document.getElementById('clienteTel').value = option.getAttribute('data-tel') || '';
+  }
+
+  // Agregar filas dinámicas de cargos
+  function agregarFila() {
+    const tbody = document.getElementById('tbodyCargos');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" name="descCargo[]" style="width:100%" required></td>
+      <td><input type="number" name="cantCargo[]" style="width:100%" value="1" min="1" onchange="calcularTotales()" required></td>
+      <td><input type="number" step="0.01" name="precioCargo[]" style="width:100%" value="0.00" onchange="calcularTotales()" required></td>
+      <td><input type="text" name="valorCargo[]" style="width:100%" value="0.00" readonly></td>
+      <td><button type="button" class="btn btn-remove" onclick="eliminarFila(this)">X</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function eliminarFila(btn) {
+    const row = btn.parentNode.parentNode;
+    if (document.querySelectorAll('#tbodyCargos tr').length > 1) {
+      row.parentNode.removeChild(row);
+      calcularTotales();
     }
+  }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      btnGuardar.disabled = true;
-      btnGuardar.innerText = 'Guardando...';
+  // Cálculo automático de subtotales y total general
+  function calcularTotales() {
+    const cants = document.getElementsByName('cantCargo[]');
+    const precios = document.getElementsByName('precioCargo[]');
+    const valores = document.getElementsByName('valorCargo[]');
+    let total = 0;
 
-      const rif = document.getElementById('rif').value;
-      const razon_social = document.getElementById('razon_social').value;
-      const contacto_nombre = document.getElementById('contacto_nombre').value;
-      const telefono = document.getElementById('telefono').value;
-      const origen = document.getElementById('origen').value;
-      const destino = document.getElementById('destino').value;
-      const tipo_carga = document.getElementById('tipo_carga').value;
-      const monto_cotizado = parseFloat(document.getElementById('monto_cotizado').value);
+    for (let i = 0; i < cants.length; i++) {
+      const cant = parseFloat(cants[i].value) || 0;
+      const precio = parseFloat(precios[i].value) || 0;
+      const sub = cant * precio;
+      valores[i].value = sub.toFixed(2);
+      total += sub;
+    }
+    document.getElementById('montoTotalDisplay').innerText = total.toFixed(2);
+  }
 
-      try {
-        // 1. Buscar o Crear Cliente
-        let { data: cliente, error: errCliente } = await supabase
-          .from('clientes')
-          .select('id')
-          .eq('rif', rif)
-          .maybeSingle();
+  // Guardar en Base de Datos vía AJAX/Fetch y habilitar botón de Impresión/PDF
+  function guardarCotizacion(e) {
+    e.preventDefault();
 
-        if (!cliente) {
-          const { data: nuevoCliente, error: errNuevo } = await supabase
-            .from('clientes')
-            .insert([{ rif, razon_social, contacto_nombre, telefono }])
-            .select()
-            .single();
+    // Aquí envías la petición POST a tu backend (PHP, Node, Apps Script, Python, etc.)
+    alert("¡Cotización " + document.getElementById('correlativo').value + " registrada exitosamente en la Base de Datos!");
 
-          if (errNuevo) throw errNuevo;
-          cliente = nuevoCliente;
-        }
+    // Ocultar botón de guardar y habilitar opción de PDF / Impresión
+    document.getElementById('btnGuardar').style.display = 'none';
+    document.getElementById('btnImprimir').style.display = 'inline-block';
+  }
 
-        // 2. Crear Cotización
-        const codigo_cotizacion = 'COT-' + Date.now().toString().slice(-5);
-        const { error: errCotizacion } = await supabase
-          .from('cotizaciones')
-          .insert([{
-            codigo_cotizacion,
-            cliente_id: cliente.id,
-            origen,
-            destino,
-            tipo_carga,
-            monto_cotizado,
-            estatus: 'Pendiente'
-          }]);
+  function abrirVistaImpresion() {
+    // Redirige o abre la vista imprimible limpia pasando el ID o Correlativo generado
+    const idCotizacion = document.getElementById('correlativo').value;
+    window.open(`imprimir_cotizacion.html?id=${idCotizacion}`, '_blank');
+  }
+</script>
 
-        if (errCotizacion) throw errCotizacion;
-
-        mostrarAlerta(`¡Cotización ${codigo_cotizacion} creada exitosamente!`);
-        form.reset();
-      } catch (err) {
-        mostrarAlerta('Error: ' + err.message, true);
-      } finally {
-        btnGuardar.disabled = false;
-        btnGuardar.innerText = 'Guardar Cotización';
-      }
-    });
-  </script>
 </body>
 </html>
