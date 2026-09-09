@@ -3,143 +3,159 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TMS Logistics - Iniciar Sesión</title>
+  <title>TMS Logistics - Acceso al Sistema</title>
+  <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Configuración local -->
+  <script src="config.js"></script>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
 
- <!-- CABECERA AZUL DE LA TARJETA DE LOGIN -->
-<div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 2rem 1.5rem; text-align: center; border-radius: 12px 12px 0 0;">
-  
-  <!-- LOGO SVG CAMIÓN AERODINÁMICO -->
-  <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
-    <svg width="68" height="68" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="5" y="5" width="90" height="90" rx="20" fill="#1e293b" stroke="#334155" stroke-width="2"/>
-      <!-- Líneas de velocidad -->
-      <path d="M 15 35 H 35 M 10 50 H 28 M 18 65 H 32" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
-      <!-- Cabina estilizada -->
-      <path d="M 32 32 L 62 32 C 70 32, 76 38, 80 46 L 85 60 C 87 64, 85 70, 78 70 L 32 70 Z" fill="url(#loginSpeedGrad)"/>
-      <!-- Parabrisas -->
-      <path d="M 62 37 L 74 49 H 62 Z" fill="#93c5fd"/>
-      <!-- Franja naranja dinámica -->
-      <path d="M 40 80 H 80 L 86 70 H 46 Z" fill="#f97316"/>
-      <!-- Ruedas -->
-      <circle cx="44" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
-      <circle cx="72" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
-      <defs>
-        <linearGradient id="loginSpeedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#3b82f6"/>
-          <stop offset="100%" stop-color="#1d4ed8"/>
-        </linearGradient>
-      </defs>
-    </svg>
-  </div>
-
-  <!-- TÍTULO Y SUBTÍTULO CON NUEVO TIPOGRAFÍA -->
-  <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 0.25rem;">
-    <span style="color: #ffffff; font-weight: 900; font-size: 1.5rem; letter-spacing: 0.5px;">TMS</span>
-    <span style="color: #f97316; font-weight: 800; font-size: 1.25rem;">|</span>
-    <span style="color: #3b82f6; font-weight: 700; font-size: 1.2rem; letter-spacing: 2px;">LOGISTICS</span>
-  </div>
-  <p style="color: #94a3b8; font-size: 0.8rem; font-weight: 500; margin: 0; letter-spacing: 0.5px;">
-    Gestión Controlada de Operaciones y Transportes
-  </p>
-</div>
-
-    <!-- Formulario de Login -->
-    <div class="p-8">
-      <form id="loginForm" class="space-y-5">
-        <div>
-          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Correo Electrónico</label>
-          <input type="email" id="email" required placeholder="usuario@empresa.com" 
-                 class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main style="width: 100%; padding: 1rem; box-sizing: border-box; display: flex; justify-content: center; align-items: center;">
+    
+    <!-- TARJETA DE LOGIN -->
+    <div style="width: 100%; max-width: 400px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1); overflow: hidden; display: flex; flex-direction: column;">
+      
+      <!-- CABECERA AZUL / MARCA -->
+      <header style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 2rem 1.25rem; text-align: center;">
+        
+        <!-- LOGO SVG CAMIÓN AERODINÁMICO -->
+        <div style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
+          <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="5" width="90" height="90" rx="20" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+            <!-- Líneas de velocidad -->
+            <path d="M 15 35 H 35 M 10 50 H 28 M 18 65 H 32" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+            <!-- Cabina estilizada -->
+            <path d="M 32 32 L 62 32 C 70 32, 76 38, 80 46 L 85 60 C 87 64, 85 70, 78 70 L 32 70 Z" fill="url(#loginSpeedGrad)"/>
+            <!-- Parabrisas -->
+            <path d="M 62 37 L 74 49 H 62 Z" fill="#93c5fd"/>
+            <!-- Franja naranja dinámica -->
+            <path d="M 40 80 H 80 L 86 70 H 46 Z" fill="#f97316"/>
+            <!-- Ruedas -->
+            <circle cx="44" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+            <circle cx="72" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+            <defs>
+              <linearGradient id="loginSpeedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6"/>
+                <stop offset="100%" stop-color="#1d4ed8"/>
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Contraseña</label>
-          <input type="password" id="password" required placeholder="••••••••" 
-                 class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
+        <!-- TÍTULO DE MARCA -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 0.35rem;">
+          <span style="color: #ffffff; font-weight: 900; font-size: 1.4rem; letter-spacing: 0.5px;">TMS</span>
+          <span style="color: #f97316; font-weight: 800; font-size: 1.1rem;">|</span>
+          <span style="color: #3b82f6; font-weight: 700; font-size: 1.15rem; letter-spacing: 1.5px;">LOGISTICS</span>
+        </div>
+        <p style="color: #94a3b8; font-size: 0.75rem; font-weight: 500; margin: 0; letter-spacing: 0.2px;">
+          Gestión Controlada de Operaciones y Transportes
+        </p>
+      </header>
+
+      <!-- FORMULARIO DE ACCESO -->
+      <form id="loginForm" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <!-- CAMPO CORREO -->
+        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="email" style="color: #475569; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;">CORREO ELECTRÓNICO</label>
+          <input type="email" id="email" required placeholder="usuario@empresa.com" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box; outline: none;">
         </div>
 
-        <div id="errorMessage" class="hidden text-red-600 text-xs bg-red-50 p-3 rounded-lg border border-red-200 font-medium"></div>
+        <!-- CAMPO CONTRASEÑA CON OJITO TOGGLE -->
+        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="password" style="color: #475569; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;">CONTRASEÑA</label>
+          <div style="position: relative; width: 100%;">
+            <input type="password" id="password" required placeholder="••••••••" style="width: 100%; padding: 0.75rem 2.5rem 0.75rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box; outline: none;">
+            
+            <!-- Botón de Ver/Ocultar -->
+            <button type="button" id="togglePassword" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #64748b; padding: 0; display: flex; align-items: center; justify-content: center;">
+              <svg id="eyeIcon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-        <button type="submit" id="btnLogin" 
-                class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all">
+        <!-- BOTÓN INGRESAR -->
+        <button type="submit" id="btnLogin" style="width: 100%; background-color: #2563eb; color: #ffffff; font-weight: 700; font-size: 0.95rem; padding: 0.85rem; border: none; border-radius: 8px; cursor: pointer; margin-top: 0.5rem; transition: background 0.2s;">
           Ingresar al Sistema
         </button>
+
+        <!-- MENSAJE DE ERROR -->
+        <div id="errorMessage" style="color: #ef4444; font-size: 0.8rem; text-align: center; display: none; font-weight: 500;"></div>
+
+        <p style="color: #94a3b8; font-size: 0.7rem; text-align: center; margin: 0; margin-top: 0.25rem;">
+          Plataforma Operativa v1.0
+        </p>
+
       </form>
-    </div>
 
-    <div class="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center text-xs text-slate-400">
-      Plataforma Operativa v1.0
     </div>
-  </div>
+  </main>
 
-  <script src="config.js"></script>
+  <!-- LÓGICA DE INTERACCIÓN Y AUTENTICACIÓN -->
   <script>
+    // 1. Mostrar / Ocultar Contraseña (Ojito)
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    togglePasswordBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+      
+      // Cambia el icono (con barra diagonal cuando está oculto)
+      if (isPassword) {
+        eyeIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a8.959 8.959 0 013.122-.563c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-2.001 3.563M9.88 9.88a3 3 0 104.243 4.243M9.88 9.88L14.12 14.12M3 3l18 18"></path>
+        `;
+      } else {
+        eyeIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+        `;
+      }
+    });
+
+    // 2. Lógica de Inicio de Sesión con Supabase
     const loginForm = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
     const btnLogin = document.getElementById('btnLogin');
 
-    // Comprobar sesión existente
-    async function checkExistingSession() {
-      try {
-        if (typeof supabaseClient !== 'undefined') {
-          const { data: { session } } = await supabaseClient.auth.getSession();
-          if (session) {
-            window.location.href = 'dashboard.html';
-          }
-        }
-      } catch (e) {
-        console.error("Error comprobando sesión:", e);
-      }
-    }
-    checkExistingSession();
-
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      errorMessage.classList.add('hidden');
-      errorMessage.innerText = '';
-      btnLogin.innerText = 'Autenticando...';
+      const email = document.getElementById('email').value;
+      const password = passwordInput.value;
+
+      errorMessage.style.display = 'none';
+      btnLogin.textContent = 'Iniciando sesión...';
       btnLogin.disabled = true;
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-
       try {
-        if (typeof supabaseClient === 'undefined') {
-          throw new Error('Error de conexión con Supabase. Revisa el archivo config.js.');
-        }
-
         const { data, error } = await supabaseClient.auth.signInWithPassword({
           email: email,
-          password: password
+          password: password,
         });
 
         if (error) {
           throw error;
         }
 
-        if (data?.session) {
-          window.location.href = 'dashboard.html';
-        }
+        // Redirección exitosa a dashboard.html
+        window.location.href = 'dashboard.html';
 
       } catch (err) {
-        let msg = 'Usuario o contraseña incorrectos.';
-        if (err.message && err.message.includes('config.js')) {
-          msg = err.message;
-        } else if (err.message && err.message.includes('Invalid login credentials')) {
-          msg = 'Correo o contraseña incorrectos. Verifica tus datos o crea el usuario en Supabase.';
-        } else if (err.message) {
-          msg = 'Error: ' + err.message;
-        }
-
-        errorMessage.innerText = msg;
-        errorMessage.classList.remove('hidden');
+        errorMessage.textContent = err.message === 'Invalid login credentials' 
+          ? 'Correo o contraseña incorrectos.' 
+          : err.message;
+        errorMessage.style.display = 'block';
       } finally {
-        btnLogin.innerText = 'Ingresar al Sistema';
+        btnLogin.textContent = 'Ingresar al Sistema';
         btnLogin.disabled = false;
       }
     });
