@@ -10,7 +10,7 @@
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
   <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-    <!-- Encabezado con Presentación / Logo -->
+    <!-- Encabezado / Logo -->
     <div class="bg-blue-600 p-8 text-center text-white">
       <div class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-3 text-3xl">
         🚛
@@ -34,7 +34,7 @@
                  class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
         </div>
 
-        <div id="errorMessage" class="hidden text-red-600 text-xs bg-red-50 p-3 rounded-lg border border-red-200"></div>
+        <div id="errorMessage" class="hidden text-red-600 text-xs bg-red-50 p-3 rounded-lg border border-red-200 font-medium"></div>
 
         <button type="submit" id="btnLogin" 
                 class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all">
@@ -54,36 +54,65 @@
     const errorMessage = document.getElementById('errorMessage');
     const btnLogin = document.getElementById('btnLogin');
 
-    // Verificar si ya está autenticado
+    // Comprobar sesión existente
     async function checkExistingSession() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        window.location.href = 'dashboard.html';
+      try {
+        if (typeof supabaseClient !== 'undefined') {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (session) {
+            window.location.href = 'dashboard.html';
+          }
+        }
+      } catch (e) {
+        console.error("Error comprobando sesión:", e);
       }
     }
     checkExistingSession();
 
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
       errorMessage.classList.add('hidden');
+      errorMessage.innerText = '';
       btnLogin.innerText = 'Autenticando...';
       btnLogin.disabled = true;
 
-      const email = document.getElementById('email').value;
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+      try {
+        if (typeof supabaseClient === 'undefined') {
+          throw new Error('Error de conexión con Supabase. Revisa el archivo config.js.');
+        }
 
-      if (error) {
-        errorMessage.innerText = 'Credenciales inválidas o usuario no registrado.';
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data?.session) {
+          window.location.href = 'dashboard.html';
+        }
+
+      } catch (err) {
+        let msg = 'Usuario o contraseña incorrectos.';
+        if (err.message && err.message.includes('config.js')) {
+          msg = err.message;
+        } else if (err.message && err.message.includes('Invalid login credentials')) {
+          msg = 'Correo o contraseña incorrectos. Verifica tus datos o crea el usuario en Supabase.';
+        } else if (err.message) {
+          msg = 'Error: ' + err.message;
+        }
+
+        errorMessage.innerText = msg;
         errorMessage.classList.remove('hidden');
+      } finally {
         btnLogin.innerText = 'Ingresar al Sistema';
         btnLogin.disabled = false;
-      } else {
-        window.location.href = 'dashboard.html';
       }
     });
   </script>
