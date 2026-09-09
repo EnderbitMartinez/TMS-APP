@@ -201,8 +201,19 @@
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
-      document.getElementById('userEmail').innerText = session.user.email;
-      document.getElementById('vendedor').value = session.user.email.split('@')[0].toUpperCase();
+      
+      const emailUsuario = session.user.email;
+      const nombreUsuario = session.user.user_metadata?.nombre || session.user.user_metadata?.full_name || emailUsuario.split('@')[0].toUpperCase();
+
+      document.getElementById('userEmail').innerText = emailUsuario;
+      
+      // Asignar email al vendedor
+      const inputVendedor = document.getElementById('vendedor');
+      if (inputVendedor) inputVendedor.value = emailUsuario;
+
+      // Asignar el nombre del usuario logueado al campo EJECUTIVO
+      const inputEjecutivo = document.getElementById('ejecutivo');
+      if (inputEjecutivo) inputEjecutivo.value = nombreUsuario;
       
       await cargarClientesSelect();
       await obtenerCotizaciones();
@@ -213,19 +224,25 @@
       const { data } = await supabaseClient.from('clientes').select('*').order('razon_social');
       clientesCache = data || [];
       const select = document.getElementById('cliente_id');
-      select.innerHTML = '<option value="">-- Seleccione un cliente --</option>' + 
-        clientesCache.map(c => `<option value="${c.id}">${c.razon_social} (${c.rif || 'Sin RIF'})</option>`).join('');
+      if (select) {
+        select.innerHTML = '<option value="">-- Seleccione un cliente --</option>' + 
+          clientesCache.map(c => `<option value="${c.id}">${c.razon_social} (${c.rif || 'Sin RIF'})</option>`).join('');
+      }
     }
 
     function actualizarDatosCliente() {
       const id = document.getElementById('cliente_id').value;
       const cliente = clientesCache.find(c => c.id === id);
-      document.getElementById('cliente_direccion').value = cliente ? (cliente.direccion || 'Sin dirección registrada') : '';
+      const inputDir = document.getElementById('cliente_direccion');
+      if (inputDir) inputDir.value = cliente ? (cliente.direccion || 'Sin dirección registrada') : '';
     }
 
     function toggleModal(show) {
-      document.getElementById('modalCotizacion').classList.toggle('hidden', !show);
-      document.getElementById('modalCotizacion').classList.toggle('flex', show);
+      const modal = document.getElementById('modalCotizacion');
+      if (modal) {
+        modal.classList.toggle('hidden', !show);
+        modal.classList.toggle('flex', show);
+      }
     }
 
     async function abrirModalCrear() {
@@ -233,6 +250,19 @@
       document.getElementById('cotizacion_id').value = '';
       document.getElementById('tbodyCargos').innerHTML = '';
       
+      // Re-autocompletar datos del usuario activo al abrir el modal
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        const emailUsuario = session.user.email;
+        const nombreUsuario = session.user.user_metadata?.nombre || session.user.user_metadata?.full_name || emailUsuario.split('@')[0].toUpperCase();
+        
+        const inputEjecutivo = document.getElementById('ejecutivo');
+        if (inputEjecutivo) inputEjecutivo.value = nombreUsuario;
+        
+        const inputVendedor = document.getElementById('vendedor');
+        if (inputVendedor) inputVendedor.value = emailUsuario;
+      }
+
       // Calcular siguiente correlativo
       const { data } = await supabaseClient.from('cotizaciones').select('correlativo');
       const num = (data?.length || 0) + 1;
@@ -276,12 +306,17 @@
       const id = document.getElementById('cotizacion_id').value;
       const total = parseFloat(document.getElementById('montoTotalDisplay').innerText);
 
+      // Obtener el valor del campo ejecutivo o el valor por defecto del usuario
+      const inputEjecutivo = document.getElementById('ejecutivo');
+      const ejecutivoNombre = inputEjecutivo ? inputEjecutivo.value : 'EJECUTIVO';
+
       const payload = {
         correlativo: document.getElementById('correlativo').value,
-        cliente_id: document.getElementById('cliente_id').value,
+        cliente_id: document.getElementById('cliente_id').value || null,
+        ejecutivo_nombre: ejecutivoNombre,
         vendedor_email: document.getElementById('vendedor').value,
         termino_pago: document.getElementById('termino_pago').value,
-        valida_hasta: document.getElementById('valida_hasta').value,
+        valida_hasta: document.getElementById('valida_hasta').value || null,
         tipo_vehiculo: document.getElementById('tipo_vehiculo').value,
         origen: document.getElementById('origen').value,
         destino: document.getElementById('destino').value,
@@ -331,6 +366,8 @@
     // Listar Historial de Cotizaciones
     async function obtenerCotizaciones() {
       const tbody = document.getElementById('tablaCotizacionesBody');
+      if (!tbody) return;
+
       const { data, error } = await supabaseClient.from('cotizaciones').select('*, clientes(razon_social)').order('created_at', { ascending: false });
 
       if (error) { tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Error: ${error.message}</td></tr>`; return; }
@@ -347,7 +384,7 @@
           <td class="p-4 font-semibold text-slate-800">${c.clientes?.razon_social || 'Cliente Eliminado'}</td>
           <td class="p-4 text-xs">${c.origen} ➔ ${c.destino}</td>
           <td class="p-4 text-xs font-medium text-slate-600">${c.tipo_vehiculo}</td>
-          <td class="p-4 font-bold text-emerald-600">$ ${parseFloat(c.monto_total).toFixed(2)}</td>
+          <td class="p-4 font-bold text-emerald-600">$ ${parseFloat(c.monto_total || 0).toFixed(2)}</td>
           <td class="p-4 text-center">
             <div class="flex justify-center gap-2">
               <button onclick="imprimirCotizacion('${c.id}')" title="Imprimir/PDF" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded">🖨️</button>
