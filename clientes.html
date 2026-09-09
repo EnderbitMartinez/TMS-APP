@@ -59,7 +59,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">Directorio de Clientes</h2>
-        <p class="text-slate-500 text-sm">Gestiona la base de datos de consignatarios, ordenantes y empresas contratantes.</p>
+        <p class="text-slate-500 text-sm">Gestiona la base de datos de consignatarios, ordenantes y perfiles de facturación.</p>
       </div>
       <button onclick="abrirModalCrear()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 text-sm">
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -75,9 +75,9 @@
             <tr>
               <th class="p-4">RIF / Cédula</th>
               <th class="p-4">Razón Social / Nombre Comercial</th>
-              <th class="p-4">Persona Contacto</th>
-              <th class="p-4">Teléfono / Email</th>
-              <th class="p-4">Estado</th>
+              <th class="p-4">Contacto Operativo</th>
+              <th class="p-4">Perfil Facturación</th>
+              <th class="p-4">Estado Fiscal</th>
               <th class="p-4 text-center">Acciones</th>
             </tr>
           </thead>
@@ -94,59 +94,104 @@
 
   <!-- MODAL PARA CREAR / EDITAR CLIENTE -->
   <div id="modalCliente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all my-8 max-h-[90vh] flex flex-col">
       
-      <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+      <div class="bg-slate-900 text-white p-5 flex justify-between items-center flex-shrink-0">
         <div>
           <h3 id="modalTitulo" class="font-bold text-lg">Registrar Nuevo Cliente</h3>
-          <p class="text-xs text-slate-400">Ingresa los datos fiscales y operacionales de la empresa.</p>
+          <p class="text-xs text-slate-400">Ingresa los datos del cliente para cotizaciones y facturación.</p>
         </div>
         <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
       </div>
 
-      <form id="formCliente" class="p-6 space-y-4">
+      <form id="formCliente" class="p-6 space-y-5 overflow-y-auto">
         <input type="hidden" id="cliente_id">
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">RIF / CÉDULA *</label>
-            <input type="text" id="rif" required placeholder="Ej: J-12345678-0" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">NOMBRE COMERCIAL</label>
-            <input type="text" id="nombre_comercial" placeholder="Ej: Importadora Central" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-          </div>
-        </div>
-
+        <!-- SECCIÓN 1: DATOS OPERATIVOS / COMERCIALES -->
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">RAZÓN SOCIAL *</label>
-          <input type="text" id="razon_social" required placeholder="Ej: Inversiones La Guaira C.A." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-        </div>
+          <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1">1. Información Comercial y Operativa</h4>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">RIF / CÉDULA *</label>
+              <input type="text" id="rif" required placeholder="Ej: J-12345678-0" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">PERSONA DE CONTACTO</label>
-            <input type="text" id="contacto_nombre" placeholder="Ej: Lic. Carlos Pérez" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">NOMBRE COMERCIAL</label>
+              <input type="text" id="nombre_comercial" placeholder="Ej: Importadora Central" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="block text-xs font-bold text-slate-700 mb-1">RAZÓN SOCIAL FISCAL *</label>
+            <input type="text" id="razon_social" required placeholder="Ej: Inversiones La Guaira C.A." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">CONTACTO LOGÍSTICA</label>
+              <input type="text" id="contacto_nombre" placeholder="Nombre completo" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">TELÉFONO LOGÍSTICA</label>
+              <input type="text" id="contacto_telefono" placeholder="0412-1234567" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">CORREO LOGÍSTICA</label>
+              <input type="email" id="contacto_email" placeholder="logistica@cliente.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">TELÉFONO</label>
-            <input type="text" id="contacto_telefono" placeholder="Ej: 0412-1234567" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block text-xs font-bold text-slate-700 mb-1">DIRECCIÓN FISCAL / DESPACHO</label>
+            <textarea id="direccion" rows="2" placeholder="Ej: Av. Principal de Maiquetía, Depósito #3..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">CORREO ELECTRÓNICO</label>
-          <input type="email" id="contacto_email" placeholder="operaciones@empresa.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        <!-- SECCIÓN 2: DATOS DE FACTURACIÓN Y COBRANZA -->
+        <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-black text-amber-900 uppercase tracking-wider">2. Datos de Facturación y Cobranza</h4>
+            <span class="text-[10px] font-bold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">Opcional para Cotizar</span>
+          </div>
+          <p class="text-xs text-amber-700 mb-3">⚠️ Estos datos serán obligatorios al momento de concretar y emitir facturas legales.</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">EMAIL RECEPCIÓN FACTURAS</label>
+              <input type="email" id="email_facturacion" placeholder="pagos@cliente.com" class="w-full px-3 py-2 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">CONTACTO CUENTAS POR PAGAR</label>
+              <input type="text" id="contacto_cobranza" placeholder="Analista de Administración / Tlf" class="w-full px-3 py-2 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">DÍAS DE CRÉDITO</label>
+              <select id="dias_credito" class="w-full px-3 py-2 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="0">0 días (Contado / Anticipado)</option>
+                <option value="7">7 días</option>
+                <option value="15">15 días</option>
+                <option value="30">30 días</option>
+              </select>
+            </div>
+
+            <div class="flex items-center pt-5">
+              <label class="relative flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="es_contribuyente_especial" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                <span class="text-xs font-bold text-slate-800">¿Es Contribuyente Especial?</span>
+              </label>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">DIRECCIÓN FISCAL / FISICA</label>
-          <textarea id="direccion" rows="2" placeholder="Ej: Av. Principal de Maiquetía, Depósito #3..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100 flex-shrink-0">
           <button type="button" onclick="toggleModal(false)" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-100 transition-all">Cancelar</button>
           <button type="submit" id="btnGuardar" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm shadow-sm transition-all">Guardar Cliente</button>
         </div>
@@ -206,6 +251,12 @@
       document.getElementById('contacto_email').value = cliente.contacto_email || '';
       document.getElementById('direccion').value = cliente.direccion || '';
 
+      // Campos de Facturación
+      document.getElementById('email_facturacion').value = cliente.email_facturacion || '';
+      document.getElementById('contacto_cobranza').value = cliente.contacto_cobranza || '';
+      document.getElementById('dias_credito').value = cliente.dias_credito || 0;
+      document.getElementById('es_contribuyente_especial').checked = cliente.es_contribuyente_especial || false;
+
       toggleModal(true);
     }
 
@@ -234,42 +285,52 @@
           return;
         }
 
-        tbody.innerHTML = clientesCache.map(c => `
-          <tr class="hover:bg-slate-50/80 transition-colors">
-            <td class="p-4 font-bold text-slate-900">${c.rif || '-'}</td>
-            <td class="p-4">
-              <div class="font-bold text-slate-800">${c.razon_social || '-'}</div>
-              <div class="text-xs text-slate-500">${c.nombre_comercial || ''}</div>
-            </td>
-            <td class="p-4 font-medium text-slate-700">${c.contacto_nombre || '-'}</td>
-            <td class="p-4">
-              <div class="font-medium text-slate-800">${c.contacto_telefono || '-'}</div>
-              <div class="text-xs text-blue-600">${c.contacto_email || ''}</div>
-            </td>
-            <td class="p-4">
-              <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">
-                ${c.estado || 'Activo'}
-              </span>
-            </td>
-            <td class="p-4 text-center">
-              <div class="flex items-center justify-center gap-2">
-                <button onclick="abrirModalEditar('${c.id}')" title="Editar" class="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-all">
-                  ✏️
-                </button>
-                <button onclick="eliminarCliente('${c.id}')" title="Eliminar" class="p-1.5 text-slate-600 hover:text-red-600 hover:bg-slate-100 rounded-lg transition-all">
-                  🗑️
-                </button>
-              </div>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = clientesCache.map(c => {
+          // Evaluar si los datos de facturación están completos
+          const aptoFacturar = c.email_facturacion && c.direccion;
+          const badgeFacturacion = aptoFacturar 
+            ? '<span class="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200">🟢 Apto Facturación</span>'
+            : '<span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-amber-200">🟡 Pendiente Datos</span>';
+
+          return `
+            <tr class="hover:bg-slate-50/80 transition-colors">
+              <td class="p-4 font-bold text-slate-900">${c.rif || '-'}</td>
+              <td class="p-4">
+                <div class="font-bold text-slate-800">${c.razon_social || '-'}</div>
+                <div class="text-xs text-slate-500">${c.nombre_comercial || ''}</div>
+              </td>
+              <td class="p-4">
+                <div class="font-medium text-slate-700">${c.contacto_nombre || '-'}</div>
+                <div class="text-xs text-slate-500">${c.contacto_telefono || ''}</div>
+              </td>
+              <td class="p-4">
+                <div class="text-xs font-semibold text-slate-700">${c.email_facturacion || 'Sin email pago'}</div>
+                <div class="text-[11px] text-slate-500">Crédito: <span class="font-bold text-slate-700">${c.dias_credito || 0} días</span></div>
+              </td>
+              <td class="p-4">
+                ${badgeFacturacion}
+                ${c.es_contribuyente_especial ? '<div class="text-[10px] text-indigo-600 font-bold mt-1">Contrib. Especial</div>' : ''}
+              </td>
+              <td class="p-4 text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <button onclick="abrirModalEditar('${c.id}')" title="Editar" class="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-all">
+                    ✏️
+                  </button>
+                  <button onclick="eliminarCliente('${c.id}')" title="Eliminar" class="p-1.5 text-slate-600 hover:text-red-600 hover:bg-slate-100 rounded-lg transition-all">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
 
       } catch (err) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500 font-medium">Error al conectar con la base de datos: ${err.message}</td></tr>`;
       }
     }
 
-    // 4. Guardar / Actualizar Cliente con validación de RIF duplicado
+    // 4. Guardar / Actualizar Cliente
     document.getElementById('formCliente').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnGuardar');
@@ -284,7 +345,13 @@
         contacto_nombre: document.getElementById('contacto_nombre').value.trim(),
         contacto_telefono: document.getElementById('contacto_telefono').value.trim(),
         contacto_email: document.getElementById('contacto_email').value.trim(),
-        direccion: document.getElementById('direccion').value.trim()
+        direccion: document.getElementById('direccion').value.trim(),
+        
+        // Nuevos campos
+        email_facturacion: document.getElementById('email_facturacion').value.trim(),
+        contacto_cobranza: document.getElementById('contacto_cobranza').value.trim(),
+        dias_credito: parseInt(document.getElementById('dias_credito').value) || 0,
+        es_contribuyente_especial: document.getElementById('es_contribuyente_especial').checked
       };
 
       try {
@@ -298,9 +365,8 @@
         }
 
         if (error) {
-          // Detectar si el error es por RIF duplicado (Restricción UNIQUE)
           if (error.code === '23505' || (error.message && error.message.includes('duplicate key'))) {
-            alert(`⚠️ El RIF "${payload.rif}" ya se encuentra registrado en el sistema. Verifica los datos o edita el cliente existente.`);
+            alert(`⚠️ El RIF "${payload.rif}" ya se encuentra registrado en el sistema.`);
             return;
           }
           throw error;
