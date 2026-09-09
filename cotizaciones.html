@@ -306,7 +306,6 @@
       const id = document.getElementById('cotizacion_id').value;
       const total = parseFloat(document.getElementById('montoTotalDisplay').innerText);
 
-      // Obtener el valor del campo ejecutivo o el valor por defecto del usuario
       const inputEjecutivo = document.getElementById('ejecutivo');
       const ejecutivoNombre = inputEjecutivo ? inputEjecutivo.value : 'EJECUTIVO';
 
@@ -318,6 +317,7 @@
         termino_pago: document.getElementById('termino_pago').value,
         valida_hasta: document.getElementById('valida_hasta').value || null,
         tipo_vehiculo: document.getElementById('tipo_vehiculo').value,
+        tipo_carga: document.getElementById('descripcion_carga').value || 'Carga Seca',
         origen: document.getElementById('origen').value,
         destino: document.getElementById('destino').value,
         piezas: parseInt(document.getElementById('piezas').value) || 1,
@@ -356,7 +356,12 @@
 
         await supabaseClient.from('items_cotizacion').insert(items);
         toggleModal(false);
-        obtenerCotizaciones();
+        await obtenerCotizaciones();
+
+        // Preguntar para abrir impresión/plantilla inmediatamente
+        if (confirm('Cotización guardada exitosamente. ¿Deseas ver / imprimir la propuesta comercial ahora?')) {
+          imprimirCotizacion(cotizacionId);
+        }
 
       } catch (err) {
         alert('Error al guardar: ' + err.message);
@@ -381,18 +386,55 @@
       tbody.innerHTML = cotizacionesCache.map(c => `
         <tr class="hover:bg-slate-50">
           <td class="p-4 font-bold text-blue-900">${c.correlativo}</td>
-          <td class="p-4 font-semibold text-slate-800">${c.clientes?.razon_social || 'Cliente Eliminado'}</td>
+          <td class="p-4 font-semibold text-slate-800">${c.clientes?.razon_social || 'Cliente sin asignar'}</td>
           <td class="p-4 text-xs">${c.origen} ➔ ${c.destino}</td>
           <td class="p-4 text-xs font-medium text-slate-600">${c.tipo_vehiculo}</td>
           <td class="p-4 font-bold text-emerald-600">$ ${parseFloat(c.monto_total || 0).toFixed(2)}</td>
           <td class="p-4 text-center">
-            <div class="flex justify-center gap-2">
-              <button onclick="imprimirCotizacion('${c.id}')" title="Imprimir/PDF" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded">🖨️</button>
+            <div class="flex justify-center gap-1">
+              <button onclick="imprimirCotizacion('${c.id}')" title="Ver / Imprimir PDF" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded">🖨️</button>
+              <button onclick="editarCotizacion('${c.id}')" title="Editar Cotización" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded">✏️</button>
               <button onclick="eliminarCotizacion('${c.id}')" title="Eliminar" class="p-1.5 text-red-600 hover:bg-red-50 rounded">🗑️</button>
             </div>
           </td>
         </tr>
       `).join('');
+    }
+
+    // Editar cotización existente
+    async function editarCotizacion(id) {
+      const cotizacion = cotizacionesCache.find(c => c.id === id);
+      if (!cotizacion) return;
+
+      document.getElementById('cotizacion_id').value = cotizacion.id;
+      document.getElementById('correlativo').value = cotizacion.correlativo;
+      document.getElementById('cliente_id').value = cotizacion.cliente_id || '';
+      document.getElementById('termino_pago').value = cotizacion.termino_pago || 'CRÉDITO 7 DÍAS';
+      document.getElementById('valida_hasta').value = cotizacion.valida_hasta || '';
+      document.getElementById('tipo_vehiculo').value = cotizacion.tipo_vehiculo || '';
+      document.getElementById('origen').value = cotizacion.origen || '';
+      document.getElementById('destino').value = cotizacion.destino || '';
+      document.getElementById('piezas').value = cotizacion.piezas || 1;
+      document.getElementById('descripcion_carga').value = cotizacion.descripcion_carga || '';
+      document.getElementById('peso_kg').value = cotizacion.peso_kg || 0;
+
+      actualizarDatosCliente();
+
+      // Cargar items de detalle
+      const tbody = document.getElementById('tbodyCargos');
+      tbody.innerHTML = '';
+
+      const { data: items } = await supabaseClient.from('items_cotizacion').select('*').eq('cotizacion_id', id);
+
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          agregarFilaCargo(item.descripcion, item.cantidad, item.precio_unitario);
+        });
+      } else {
+        agregarFilaCargo();
+      }
+
+      toggleModal(true);
     }
 
     async function eliminarCotizacion(id) {
@@ -402,6 +444,10 @@
     }
 
     function imprimirCotizacion(id) {
+      if (!id) {
+        alert('ID de cotización no válido');
+        return;
+      }
       window.open(`imprimir_cotizacion.html?id=${id}`, '_blank');
     }
 
