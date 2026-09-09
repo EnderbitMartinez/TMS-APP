@@ -3,241 +3,372 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Módulo de Cotizaciones - Captura de Datos</title>
-  <style>
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #f0f2f5; padding: 20px; color: #333; }
-    .form-container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    
-    h2 { border-bottom: 2px solid #0056b3; padding-bottom: 8px; color: #0056b3; margin-top: 0; }
-    .section-title { background: #e9ecef; padding: 6px 12px; font-weight: bold; margin: 20px 0 10px 0; border-left: 4px solid #0056b3; }
-    
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
-    .form-group { display: flex; flex-direction: column; }
-    .form-group label { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #495057; }
-    .form-group input, .form-group select, .form-group textarea { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; }
-    .form-group input[readonly] { background-color: #e9ecef; }
-    
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #dee2e6; padding: 8px; font-size: 12px; text-align: left; }
-    th { background: #f8f9fa; }
-    
-    .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .btn-add { background: #28a745; color: white; margin-top: 8px; }
-    .btn-remove { background: #dc3545; color: white; padding: 4px 8px; }
-    .btn-save { background: #0056b3; color: white; font-size: 15px; padding: 12px 24px; }
-    .btn-print { background: #17a2b8; color: white; font-size: 15px; padding: 12px 24px; display: none; }
-    
-    .actions-bar { margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px; border-top: 1px solid #dee2e6; padding-top: 15px; }
-    .total-display { font-size: 18px; font-weight: bold; text-align: right; margin-top: 10px; color: #0056b3; }
-  </style>
+  <title>TMS - Módulo de Cotizaciones</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body>
+<body class="bg-slate-50 min-h-screen">
 
-<div class="form-container">
-  <h2>Generador de Cotizaciones</h2>
-  
-  <form id="cotizacionForm" onsubmit="guardarCotizacion(event)">
-    
-    <!-- 1. DATOS DE CONTROL / SISTEMA -->
-    <div class="section-title">1. Control de Registro</div>
-    <div class="grid">
-      <div class="form-group">
-        <label>Correlativo (Autogenerado):</label>
-        <input type="text" id="correlativo" value="COT-0416" readonly>
-      </div>
-      <div class="form-group">
-        <label>Fecha / Hora:</label>
-        <input type="datetime-local" id="fechaHora" required>
-      </div>
-      <div class="form-group">
-        <label>Término de Pago:</label>
-        <select id="terminoPago" required>
-          <option value="CONTRA FACTURA">CONTRA FACTURA</option>
-          <option value="CRÉDITO 15 DÍAS">CRÉDITO 15 DÍAS</option>
-          <option value="50% ADELANTADO">50% ADELANTADO</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Válida Hasta:</label>
-        <input type="date" id="validaHasta" required>
-      </div>
-      <div class="form-group">
-        <label>Ejecutivo / Usuario Activo:</label>
-        <!-- Inyección automática del usuario logueado en el sistema -->
-        <input type="text" id="vendedor" value="LSCOTT" readonly>
+  <!-- HEADER NAVEGACIÓN -->
+  <header style="background-color: #0f172a; padding: 0.75rem 1.5rem; border-bottom: 1px solid #1e293b;">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+      <a href="dashboard.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+        <svg width="42" height="42" viewBox="0 0 100 100" fill="none" style="flex-shrink: 0;">
+          <rect x="5" y="5" width="90" height="90" rx="20" fill="#1e293b"/>
+          <path d="M 15 35 H 35 M 10 50 H 28 M 18 65 H 32" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 32 32 L 62 32 C 70 32, 76 38, 80 46 L 85 60 C 87 64, 85 70, 78 70 L 32 70 Z" fill="url(#speedGrad)"/>
+          <path d="M 62 37 L 74 49 H 62 Z" fill="#93c5fd"/>
+          <path d="M 40 80 H 80 L 86 70 H 46 Z" fill="#f97316"/>
+          <circle cx="44" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+          <circle cx="72" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+          <defs>
+            <linearGradient id="speedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#1d4ed8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div style="display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="color: #ffffff; font-weight: 900; font-size: 1.25rem;">TMS</span>
+            <span style="color: #f97316; font-weight: 800;">|</span>
+            <span style="color: #3b82f6; font-weight: 700; letter-spacing: 2px;">LOGISTICS</span>
+          </div>
+          <span style="color: #64748b; font-size: 0.65rem; font-weight: 600;">MÓDULO DE COTIZACIONES</span>
+        </div>
+      </a>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span id="userEmail" style="color: #94a3b8; font-size: 0.875rem;"></span>
+        <a href="dashboard.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-sm font-semibold border border-slate-700">← Menú Principal</a>
       </div>
     </div>
+  </header>
 
-    <!-- 2. CLIENTE (CONECTADO A BD CLIENTES) -->
-    <div class="section-title">2. Información del Cliente (Base de Datos)</div>
-    <div class="grid">
-      <div class="form-group" style="grid-column: span 2;">
-        <label>Seleccionar Cliente:</label>
-        <select id="clienteSelect" onchange="cargarDatosCliente()" required>
-          <option value="">-- Seleccione un cliente registrado --</option>
-          <option value="1" data-dir="AV. NORTE SUR, EDIF. LABORATORIOS VARGAS PISO 2 LOCAL 171 URB QUINTA CRESPO" data-tel="+58 212 409 0184">LABORATORIOS VARGAS, S.A.</option>
-          <option value="2" data-dir="AV. PRINCIPAL LAS MERCEDES, EDIF. FARMATODO" data-tel="+58 212 999 1111">FARMATODO C.A.</option>
-        </select>
+  <!-- CONTENIDO -->
+  <main class="max-w-6xl mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800">Historial de Cotizaciones</h2>
+        <p class="text-slate-500 text-sm">Crea, edita e imprime propuestas comerciales para clientes.</p>
       </div>
-      <div class="form-group">
-        <label>Teléfono:</label>
-        <input type="text" id="clienteTel" readonly>
-      </div>
-    </div>
-    <div class="form-group" style="margin-top: 10px;">
-      <label>Dirección Fiscal:</label>
-      <input type="text" id="clienteDir" readonly>
+      <button onclick="abrirModalCrear()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-2 text-sm">
+        + Nueva Cotización
+      </button>
     </div>
 
-    <!-- 3. RUTA Y MOVIMIENTO -->
-    <div class="section-title">3. Datos de Logística y Operación</div>
-    <div class="grid">
-      <div class="form-group">
-        <label>Tipo de Movimiento:</label>
-        <select id="tipoMov">
-          <option value="OTRO">OTRO</option>
-          <option value="IMPORTACION">IMPORTACION</option>
-          <option value="EXPORTACION">EXPORTACION</option>
-          <option value="NACIONAL">NACIONAL</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Origen:</label>
-        <input type="text" id="origen" placeholder="Ej. CARACAS" required>
-      </div>
-      <div class="form-group">
-        <label>Destino:</label>
-        <input type="text" id="destino" placeholder="Ej. CHARALLAVE" required>
-      </div>
+    <!-- TABLA HISTORIAL -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <table class="w-full text-left text-sm text-slate-600">
+        <thead class="bg-slate-100 text-slate-700 font-bold border-b text-xs uppercase">
+          <tr>
+            <th class="p-4">Correlativo</th>
+            <th class="p-4">Cliente</th>
+            <th class="p-4">Ruta (Origen - Destino)</th>
+            <th class="p-4">Unidad</th>
+            <th class="p-4">Monto Total</th>
+            <th class="p-4 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaCotizacionesBody" class="divide-y divide-slate-100">
+          <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando cotizaciones...</td></tr>
+        </tbody>
+      </table>
     </div>
+  </main>
 
-    <!-- 4. CARGA -->
-    <div class="section-title">4. Información de la Carga</div>
-    <div class="grid">
-      <div class="form-group">
-        <label>Piezas:</label>
-        <input type="number" id="cargaPiezas" value="1" min="1">
+  <!-- MODAL FORMULARIO DE COTIZACIÓN -->
+  <div id="modalCotizacion" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+        <h3 id="modalTitulo" class="font-bold text-lg">Nueva Cotización</h3>
+        <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
       </div>
-      <div class="form-group" style="grid-column: span 2;">
-        <label>Descripción de Carga:</label>
-        <input type="text" id="cargaDesc" placeholder="Ej. DESPACHO PARA FARMATODO CHARALLAVE">
-      </div>
-      <div class="form-group">
-        <label>Peso (Kg):</label>
-        <input type="text" id="cargaPeso">
-      </div>
-      <div class="form-group">
-        <label>Volumen (m³):</label>
-        <input type="text" id="cargaVol">
-      </div>
+
+      <form id="formCotizacion" onsubmit="guardarCotizacion(event)" class="p-6 space-y-4 overflow-y-auto">
+        <input type="hidden" id="cotizacion_id">
+
+        <!-- 1. CONTROL -->
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600">CORRELATIVO</label>
+            <input type="text" id="correlativo" readonly class="w-full bg-slate-200 font-bold px-2 py-1.5 rounded border border-slate-300 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600">EJECUTIVO</label>
+            <input type="text" id="vendedor" readonly class="w-full bg-slate-200 px-2 py-1.5 rounded border border-slate-300 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600">TÉRMINO DE PAGO</label>
+            <select id="termino_pago" class="w-full border px-2 py-1.5 rounded text-sm">
+              <option value="CONTRA FACTURA">CONTRA FACTURA</option>
+              <option value="CRÉDITO 7 DÍAS">CRÉDITO 7 DÍAS</option>
+              <option value="CRÉDITO 15 DÍAS">CRÉDITO 15 DÍAS</option>
+              <option value="50% ADELANTADO">50% ADELANTADO</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600">VÁLIDA HASTA</label>
+            <input type="date" id="valida_hasta" required class="w-full border px-2 py-1.5 rounded text-sm">
+          </div>
+        </div>
+
+        <!-- 2. CLIENTE DESDE BD REAL -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">SELECCIONAR CLIENTE (BD) *</label>
+          <select id="cliente_id" required onchange="actualizarDatosCliente()" class="w-full border border-slate-300 p-2 rounded-lg text-sm font-semibold">
+            <option value="">-- Seleccione un cliente --</option>
+          </select>
+          <input type="text" id="cliente_direccion" readonly placeholder="Dirección Fiscal del Cliente" class="w-full bg-slate-100 border text-xs p-2 rounded mt-2 text-slate-600">
+        </div>
+
+        <!-- 3. DATOS DE LOGÍSTICA Y UNIDAD DE TRANSPORTE -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">TIPO DE VEHÍCULO / UNIDAD *</label>
+            <select id="tipo_vehiculo" required class="w-full border p-2 rounded-lg text-sm">
+              <option value="C-350 Cava / Plataforma">C-350 Cava / Plataforma</option>
+              <option value="C-750 / Vertis Carga Seca">C-750 / Vertis Carga Seca</option>
+              <option value="Camión Chasis Largo">Camión Chasis Largo</option>
+              <option value="Gandola / Batea">Gandola / Batea</option>
+              <option value="Gandola Furgón 48/53'">Gandola Furgón 48/53'</option>
+              <option value="Grúa / Lowboy">Grúa / Lowboy</option>
+              <option value="Servicio Aduanal / Otom">Servicio Aduanal / Otom</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ORIGEN *</label>
+            <input type="text" id="origen" required placeholder="Ej: CARACAS / LA GUAIRA" class="w-full border p-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">DESTINO *</label>
+            <input type="text" id="destino" required placeholder="Ej: CHARALLAVE / VALENCIA" class="w-full border p-2 rounded-lg text-sm">
+          </div>
+        </div>
+
+        <!-- 4. CARGA -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div>
+            <label class="block text-xs font-bold text-slate-600">PIEZAS</label>
+            <input type="number" id="piezas" value="1" min="1" class="w-full border p-1.5 rounded text-sm">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-600">DESCRIPCIÓN DE CARGA</label>
+            <input type="text" id="descripcion_carga" placeholder="Ej: Mercancía seca / Bultos generales" class="w-full border p-1.5 rounded text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600">PESO (KG)</label>
+            <input type="number" step="0.01" id="peso_kg" placeholder="0.00" class="w-full border p-1.5 rounded text-sm">
+          </div>
+        </div>
+
+        <!-- 5. DETALLE DE CARGOS DINÁMICOS -->
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-xs font-black text-slate-500 uppercase">Conceptos y Tarifas Cotizadas</h4>
+            <button type="button" onclick="agregarFilaCargo()" class="text-xs bg-emerald-600 text-white font-bold px-2.5 py-1 rounded hover:bg-emerald-700">+ Agregar Cargo</button>
+          </div>
+          <table class="w-full text-xs border border-slate-200">
+            <thead class="bg-slate-100 font-bold">
+              <tr>
+                <th class="p-2 border">Descripción del Cargo</th>
+                <th class="p-2 border w-20">Cant.</th>
+                <th class="p-2 border w-28">Precio ($)</th>
+                <th class="p-2 border w-28">Valor ($)</th>
+                <th class="p-2 border w-10"></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyCargos"></tbody>
+          </table>
+          <div class="text-right text-lg font-bold text-blue-900 mt-2">
+            Total: $ <span id="montoTotalDisplay">0.00</span>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t">
+          <button type="button" onclick="toggleModal(false)" class="px-4 py-2 border rounded-lg text-sm font-semibold">Cancelar</button>
+          <button type="submit" id="btnGuardar" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-sm shadow">Guardar Cotización</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- 5. TABLA DINÁMICA DE CARGOS Y SERVICIOS -->
-    <div class="section-title">5. Desglose de Cargos y Tarifas</div>
-    <table id="tablaCargos">
-      <thead>
-        <tr>
-          <th style="width: 45%;">Descripción del Cargo</th>
-          <th style="width: 15%;">Cantidad</th>
-          <th style="width: 20%;">Precio ($)</th>
-          <th style="width: 15%;">Valor ($)</th>
-          <th style="width: 5%;">Acción</th>
-        </tr>
-      </thead>
-      <tbody id="tbodyCargos">
-        <!-- Fila Inicial por Defecto -->
-        <tr>
-          <td><input type="text" name="descCargo[]" class="form-group" style="width:100%" placeholder="Ej. TRANSPORTE TERRESTRE C-750" required></td>
-          <td><input type="number" name="cantCargo[]" style="width:100%" value="1" min="1" onchange="calcularTotales()" required></td>
-          <td><input type="number" step="0.01" name="precioCargo[]" style="width:100%" value="0.00" onchange="calcularTotales()" required></td>
-          <td><input type="text" name="valorCargo[]" style="width:100%" value="0.00" readonly></td>
-          <td><button type="button" class="btn btn-remove" onclick="eliminarFila(this)">X</button></td>
-        </tr>
-      </tbody>
-    </table>
-    <button type="button" class="btn btn-add" onclick="agregarFila()">+ Agregar Cargo</button>
+  <script src="config.js"></script>
+  <script>
+    let clientesCache = [];
+    let cotizacionesCache = [];
 
-    <div class="total-display">Total Cotizado: $ <span id="montoTotalDisplay">0.00</span></div>
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      document.getElementById('userEmail').innerText = session.user.email;
+      document.getElementById('vendedor').value = session.user.email.split('@')[0].toUpperCase();
+      
+      await cargarClientesSelect();
+      await obtenerCotizaciones();
+    }
 
-    <!-- 6. ACCIONES FINALIZADORAS -->
-    <div class="actions-bar">
-      <button type="submit" id="btnGuardar" class="btn btn-save">💾 Guardar Cotización en BD</button>
-      <button type="button" id="btnImprimir" class="btn btn-print" onclick="abrirVistaImpresion()">🖨️ Generar PDF / Imprimir</button>
-    </div>
+    // Cargar selector de clientes reales desde BD
+    async function cargarClientesSelect() {
+      const { data } = await supabaseClient.from('clientes').select('*').order('razon_social');
+      clientesCache = data || [];
+      const select = document.getElementById('cliente_id');
+      select.innerHTML = '<option value="">-- Seleccione un cliente --</option>' + 
+        clientesCache.map(c => `<option value="${c.id}">${c.razon_social} (${c.rif || 'Sin RIF'})</option>`).join('');
+    }
 
-  </form>
-</div>
+    function actualizarDatosCliente() {
+      const id = document.getElementById('cliente_id').value;
+      const cliente = clientesCache.find(c => c.id === id);
+      document.getElementById('cliente_direccion').value = cliente ? (cliente.direccion || 'Sin dirección registrada') : '';
+    }
 
-<script>
-  // Cargar fecha actual
-  document.getElementById('fechaHora').value = new Date().toISOString().slice(0, 16);
+    function toggleModal(show) {
+      document.getElementById('modalCotizacion').classList.toggle('hidden', !show);
+      document.getElementById('modalCotizacion').classList.toggle('flex', show);
+    }
 
-  // Auto-llenar datos al seleccionar cliente de la BD
-  function cargarDatosCliente() {
-    const select = document.getElementById('clienteSelect');
-    const option = select.options[select.selectedIndex];
-    document.getElementById('clienteDir').value = option.getAttribute('data-dir') || '';
-    document.getElementById('clienteTel').value = option.getAttribute('data-tel') || '';
-  }
+    async function abrirModalCrear() {
+      document.getElementById('formCotizacion').reset();
+      document.getElementById('cotizacion_id').value = '';
+      document.getElementById('tbodyCargos').innerHTML = '';
+      
+      // Calcular siguiente correlativo
+      const { data } = await supabaseClient.from('cotizaciones').select('correlativo');
+      const num = (data?.length || 0) + 1;
+      document.getElementById('correlativo').value = `COT-${String(num).padStart(4, '0')}`;
+      
+      agregarFilaCargo();
+      toggleModal(true);
+    }
 
-  // Agregar filas dinámicas de cargos
-  function agregarFila() {
-    const tbody = document.getElementById('tbodyCargos');
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="text" name="descCargo[]" style="width:100%" required></td>
-      <td><input type="number" name="cantCargo[]" style="width:100%" value="1" min="1" onchange="calcularTotales()" required></td>
-      <td><input type="number" step="0.01" name="precioCargo[]" style="width:100%" value="0.00" onchange="calcularTotales()" required></td>
-      <td><input type="text" name="valorCargo[]" style="width:100%" value="0.00" readonly></td>
-      <td><button type="button" class="btn btn-remove" onclick="eliminarFila(this)">X</button></td>
-    `;
-    tbody.appendChild(tr);
-  }
-
-  function eliminarFila(btn) {
-    const row = btn.parentNode.parentNode;
-    if (document.querySelectorAll('#tbodyCargos tr').length > 1) {
-      row.parentNode.removeChild(row);
+    function agregarFilaCargo(desc = '', cant = 1, precio = 0) {
+      const tbody = document.getElementById('tbodyCargos');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="p-1 border"><input type="text" name="descCargo" value="${desc}" required class="w-full border p-1 rounded"></td>
+        <td class="p-1 border"><input type="number" name="cantCargo" value="${cant}" min="1" onchange="calcularTotales()" class="w-full border p-1 text-center rounded"></td>
+        <td class="p-1 border"><input type="number" step="0.01" name="precioCargo" value="${precio}" onchange="calcularTotales()" class="w-full border p-1 text-right rounded"></td>
+        <td class="p-1 border"><input type="text" name="valorCargo" value="0.00" readonly class="w-full bg-slate-100 p-1 text-right rounded font-bold"></td>
+        <td class="p-1 border text-center"><button type="button" onclick="this.closest('tr').remove(); calcularTotales();" class="text-red-600 font-bold">✕</button></td>
+      `;
+      tbody.appendChild(tr);
       calcularTotales();
     }
-  }
 
-  // Cálculo automático de subtotales y total general
-  function calcularTotales() {
-    const cants = document.getElementsByName('cantCargo[]');
-    const precios = document.getElementsByName('precioCargo[]');
-    const valores = document.getElementsByName('valorCargo[]');
-    let total = 0;
+    function calcularTotales() {
+      const cants = document.getElementsByName('cantCargo');
+      const precios = document.getElementsByName('precioCargo');
+      const valores = document.getElementsByName('valorCargo');
+      let total = 0;
 
-    for (let i = 0; i < cants.length; i++) {
-      const cant = parseFloat(cants[i].value) || 0;
-      const precio = parseFloat(precios[i].value) || 0;
-      const sub = cant * precio;
-      valores[i].value = sub.toFixed(2);
-      total += sub;
+      for (let i = 0; i < cants.length; i++) {
+        const sub = (parseFloat(cants[i].value) || 0) * (parseFloat(precios[i].value) || 0);
+        valores[i].value = sub.toFixed(2);
+        total += sub;
+      }
+      document.getElementById('montoTotalDisplay').innerText = total.toFixed(2);
     }
-    document.getElementById('montoTotalDisplay').innerText = total.toFixed(2);
-  }
 
-  // Guardar en Base de Datos vía AJAX/Fetch y habilitar botón de Impresión/PDF
-  function guardarCotizacion(e) {
-    e.preventDefault();
+    // Guardar Cotización
+    async function guardarCotizacion(e) {
+      e.preventDefault();
+      const id = document.getElementById('cotizacion_id').value;
+      const total = parseFloat(document.getElementById('montoTotalDisplay').innerText);
 
-    // Aquí envías la petición POST a tu backend (PHP, Node, Apps Script, Python, etc.)
-    alert("¡Cotización " + document.getElementById('correlativo').value + " registrada exitosamente en la Base de Datos!");
+      const payload = {
+        correlativo: document.getElementById('correlativo').value,
+        cliente_id: document.getElementById('cliente_id').value,
+        vendedor_email: document.getElementById('vendedor').value,
+        termino_pago: document.getElementById('termino_pago').value,
+        valida_hasta: document.getElementById('valida_hasta').value,
+        tipo_vehiculo: document.getElementById('tipo_vehiculo').value,
+        origen: document.getElementById('origen').value,
+        destino: document.getElementById('destino').value,
+        piezas: parseInt(document.getElementById('piezas').value) || 1,
+        descripcion_carga: document.getElementById('descripcion_carga').value,
+        peso_kg: parseFloat(document.getElementById('peso_kg').value) || 0,
+        monto_total: total
+      };
 
-    // Ocultar botón de guardar y habilitar opción de PDF / Impresión
-    document.getElementById('btnGuardar').style.display = 'none';
-    document.getElementById('btnImprimir').style.display = 'inline-block';
-  }
+      try {
+        let cotizacionId = id;
+        if (!id) {
+          const { data, error } = await supabaseClient.from('cotizaciones').insert([payload]).select();
+          if (error) throw error;
+          cotizacionId = data[0].id;
+        } else {
+          const { error } = await supabaseClient.from('cotizaciones').update(payload).eq('id', id);
+          if (error) throw error;
+          await supabaseClient.from('items_cotizacion').delete().eq('cotizacion_id', id);
+        }
 
-  function abrirVistaImpresion() {
-    // Redirige o abre la vista imprimible limpia pasando el ID o Correlativo generado
-    const idCotizacion = document.getElementById('correlativo').value;
-    window.open(`imprimir_cotizacion.html?id=${idCotizacion}`, '_blank');
-  }
-</script>
+        // Insertar items
+        const descs = document.getElementsByName('descCargo');
+        const cants = document.getElementsByName('cantCargo');
+        const precios = document.getElementsByName('precioCargo');
+        const items = [];
 
+        for (let i = 0; i < descs.length; i++) {
+          items.push({
+            cotizacion_id: cotizacionId,
+            descripcion: descs[i].value,
+            cantidad: parseFloat(cants[i].value) || 1,
+            precio_unitario: parseFloat(precios[i].value) || 0,
+            valor_total: (parseFloat(cants[i].value) || 1) * (parseFloat(precios[i].value) || 0)
+          });
+        }
+
+        await supabaseClient.from('items_cotizacion').insert(items);
+        toggleModal(false);
+        obtenerCotizaciones();
+
+      } catch (err) {
+        alert('Error al guardar: ' + err.message);
+      }
+    }
+
+    // Listar Historial de Cotizaciones
+    async function obtenerCotizaciones() {
+      const tbody = document.getElementById('tablaCotizacionesBody');
+      const { data, error } = await supabaseClient.from('cotizaciones').select('*, clientes(razon_social)').order('created_at', { ascending: false });
+
+      if (error) { tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Error: ${error.message}</td></tr>`; return; }
+      cotizacionesCache = data || [];
+
+      if (cotizacionesCache.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay cotizaciones emitidas.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = cotizacionesCache.map(c => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-4 font-bold text-blue-900">${c.correlativo}</td>
+          <td class="p-4 font-semibold text-slate-800">${c.clientes?.razon_social || 'Cliente Eliminado'}</td>
+          <td class="p-4 text-xs">${c.origen} ➔ ${c.destino}</td>
+          <td class="p-4 text-xs font-medium text-slate-600">${c.tipo_vehiculo}</td>
+          <td class="p-4 font-bold text-emerald-600">$ ${parseFloat(c.monto_total).toFixed(2)}</td>
+          <td class="p-4 text-center">
+            <div class="flex justify-center gap-2">
+              <button onclick="imprimirCotizacion('${c.id}')" title="Imprimir/PDF" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded">🖨️</button>
+              <button onclick="eliminarCotizacion('${c.id}')" title="Eliminar" class="p-1.5 text-red-600 hover:bg-red-50 rounded">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function eliminarCotizacion(id) {
+      if (!confirm('¿Eliminar esta cotización permanentemente?')) return;
+      await supabaseClient.from('cotizaciones').delete().eq('id', id);
+      obtenerCotizaciones();
+    }
+
+    function imprimirCotizacion(id) {
+      window.open(`imprimir_cotizacion.html?id=${id}`, '_blank');
+    }
+
+    init();
+  </script>
 </body>
 </html>
