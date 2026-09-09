@@ -269,7 +269,7 @@
       }
     }
 
-    // 4. Guardar / Actualizar Cliente
+   // 4. Guardar / Actualizar Cliente con validación de RIF duplicado
     document.getElementById('formCliente').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnGuardar');
@@ -297,7 +297,14 @@
           error = res.error;
         }
 
-        if (error) throw error;
+        if (error) {
+          // Detectar si el error es por RIF duplicado (Restricción UNIQUE)
+          if (error.code === '23505' || (error.message && error.message.includes('duplicate key'))) {
+            alert(`⚠️ El RIF "${payload.rif}" ya se encuentra registrado en el sistema. Verifica los datos o edita el cliente existente.`);
+            return;
+          }
+          throw error;
+        }
 
         toggleModal(false);
         obtenerClientes();
@@ -309,7 +316,6 @@
         btn.innerText = 'Guardar Cliente';
       }
     });
-
     // 5. Eliminar Cliente
     async function eliminarCliente(id) {
       if (!confirm('¿Estás seguro de que deseas eliminar este cliente?')) return;
