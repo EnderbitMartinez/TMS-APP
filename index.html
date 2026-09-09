@@ -9,15 +9,43 @@
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
-  <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-    <!-- Encabezado / Logo -->
-    <div class="bg-blue-600 p-8 text-center text-white">
-      <div class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-3 text-3xl">
-        🚛
-      </div>
-      <h1 class="text-2xl font-bold tracking-wide">Sistema TMS</h1>
-      <p class="text-blue-100 text-sm mt-1">Gestión Controlada de Operaciones y Transportes</p>
-    </div>
+ <!-- CABECERA AZUL DE LA TARJETA DE LOGIN -->
+<div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 2rem 1.5rem; text-align: center; border-radius: 12px 12px 0 0;">
+  
+  <!-- LOGO SVG CAMIÓN AERODINÁMICO -->
+  <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+    <svg width="68" height="68" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="5" width="90" height="90" rx="20" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+      <!-- Líneas de velocidad -->
+      <path d="M 15 35 H 35 M 10 50 H 28 M 18 65 H 32" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+      <!-- Cabina estilizada -->
+      <path d="M 32 32 L 62 32 C 70 32, 76 38, 80 46 L 85 60 C 87 64, 85 70, 78 70 L 32 70 Z" fill="url(#loginSpeedGrad)"/>
+      <!-- Parabrisas -->
+      <path d="M 62 37 L 74 49 H 62 Z" fill="#93c5fd"/>
+      <!-- Franja naranja dinámica -->
+      <path d="M 40 80 H 80 L 86 70 H 46 Z" fill="#f97316"/>
+      <!-- Ruedas -->
+      <circle cx="44" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+      <circle cx="72" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+      <defs>
+        <linearGradient id="loginSpeedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#3b82f6"/>
+          <stop offset="100%" stop-color="#1d4ed8"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- TÍTULO Y SUBTÍTULO CON NUEVO TIPOGRAFÍA -->
+  <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 0.25rem;">
+    <span style="color: #ffffff; font-weight: 900; font-size: 1.5rem; letter-spacing: 0.5px;">TMS</span>
+    <span style="color: #f97316; font-weight: 800; font-size: 1.25rem;">|</span>
+    <span style="color: #3b82f6; font-weight: 700; font-size: 1.2rem; letter-spacing: 2px;">LOGISTICS</span>
+  </div>
+  <p style="color: #94a3b8; font-size: 0.8rem; font-weight: 500; margin: 0; letter-spacing: 0.5px;">
+    Gestión Controlada de Operaciones y Transportes
+  </p>
+</div>
 
     <!-- Formulario de Login -->
     <div class="p-8">
