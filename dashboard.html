@@ -24,7 +24,7 @@
         <path d="M 32 32 L 62 32 C 70 32, 76 38, 80 46 L 85 60 C 87 64, 85 70, 78 70 L 32 70 Z" fill="url(#speedGrad)"/>
         <!-- Parabrisas -->
         <path d="M 62 37 L 74 49 H 62 Z" fill="#93c5fd"/>
-        <!-- Franja naranja dinama -->
+        <!-- Franja naranja dinámica -->
         <path d="M 40 80 H 80 L 86 70 H 46 Z" fill="#f97316"/>
         <!-- Ruedas -->
         <circle cx="44" cy="70" r="6" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
@@ -66,9 +66,18 @@
       <p class="text-slate-500 text-sm">Selecciona el módulo al que deseas acceder</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       
-      <!-- Opción 1: Cotizaciones -->
+      <!-- Opción 1: Clientes (NUEVA OPCIÓN) -->
+      <a href="clientes.html" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-500 transition-all group">
+        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+          🏢
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-1">Directorio de Clientes</h3>
+        <p class="text-slate-500 text-sm">Registra y administra las empresas, RIF, contactos y datos de facturación.</p>
+      </a>
+
+      <!-- Opción 2: Cotizaciones -->
       <a href="cotizaciones.html" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-500 transition-all group">
         <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all">
           📋
@@ -77,7 +86,7 @@
         <p class="text-slate-500 text-sm">Registra solicitudes de clientes, cálculos de rutas y tarifas operativas.</p>
       </a>
 
-      <!-- Opción 2: Módulo Futuro (Deshabilitado temporalmente) -->
+      <!-- Opción 3: Control de Flota (Próximamente) -->
       <div class="bg-slate-100 p-6 rounded-xl border border-slate-200 opacity-60 cursor-not-allowed">
         <div class="w-12 h-12 bg-slate-200 text-slate-500 rounded-lg flex items-center justify-center text-2xl mb-4">
           🚚
@@ -86,7 +95,7 @@
         <p class="text-slate-400 text-sm">Próximamente: Asignación de choferes, unidades y viáticos.</p>
       </div>
 
-      <!-- Opción 3: Módulo Futuro -->
+      <!-- Opción 4: Reportes e Indicadores (Próximamente) -->
       <div class="bg-slate-100 p-6 rounded-xl border border-slate-200 opacity-60 cursor-not-allowed">
         <div class="w-12 h-12 bg-slate-200 text-slate-500 rounded-lg flex items-center justify-center text-2xl mb-4">
           📊
