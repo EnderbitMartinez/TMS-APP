@@ -236,9 +236,9 @@
 
         tbody.innerHTML = clientesCache.map(c => `
           <tr class="hover:bg-slate-50/80 transition-colors">
-            <td class="p-4 font-bold text-slate-900">${c.rif}</td>
+            <td class="p-4 font-bold text-slate-900">${c.rif || '-'}</td>
             <td class="p-4">
-              <div class="font-bold text-slate-800">${c.razon_social}</div>
+              <div class="font-bold text-slate-800">${c.razon_social || '-'}</div>
               <div class="text-xs text-slate-500">${c.nombre_comercial || ''}</div>
             </td>
             <td class="p-4 font-medium text-slate-700">${c.contacto_nombre || '-'}</td>
@@ -269,7 +269,7 @@
       }
     }
 
-   // 4. Guardar / Actualizar Cliente con validación de RIF duplicado
+    // 4. Guardar / Actualizar Cliente con validación de RIF duplicado
     document.getElementById('formCliente').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnGuardar');
@@ -316,6 +316,7 @@
         btn.innerText = 'Guardar Cliente';
       }
     });
+
     // 5. Eliminar Cliente
     async function eliminarCliente(id) {
       if (!confirm('¿Estás seguro de que deseas eliminar este cliente?')) return;
